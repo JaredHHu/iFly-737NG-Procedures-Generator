@@ -1,22 +1,19 @@
-#外部库
+# 外部库
 import csv
 
-#基础项
-dict_coordinate = {'名称':['纬度', '经度']}
-judge_coordinate = True
-
-#软件信息
+# 软件信息
 print("iFly飞行程序数据文件生成器\n")
-print("当前版本：0.1.0.0\n")
+print("当前版本：0.1.1.0\n")
 print("更新日志：")
-print("0.1.0.0  2022.04.22  实现坐标的检查、转换与存储\n")
+print("0.1.0.0  2022.04.21  实现坐标的检查、转换、读取与存储")
+print("0.1.1.0  2022.04.22  实现程序列表的生成\n")
 print("Github仓库：https://github.com/JaredHHu/iFly-737NG-Procedures-Generator\n")
 
-#函数
-###检查输入航路点正确与否
+# 函数
+### 检查输入航路点正确与否
 def Checkcoordinate(rawcoordinate):
 	checker_coordinate = rawcoordinate.split()
-	if checker_coordinate[0] == "READ" or checker_coordinate[0] == "SAVE" or checker_coordinate[0] == "FINISH":
+	if checker_coordinate[0] == "READ" or checker_coordinate[0] == "SAVE" or checker_coordinate[0] == "DONE":
 		return True
 	elif 0 < len(checker_coordinate[0]) <= 5:
 		if len(checker_coordinate) == 7:
@@ -58,7 +55,7 @@ def Checkcoordinate(rawcoordinate):
 	else:
 		return False
 
-###航路点处理与存储
+### 航路点处理与存储
 def Cookandstorecoordinate(rawcoordinate):
 	raw_list = rawcoordinate.split()
 	waypointname = raw_list[0]
@@ -76,7 +73,7 @@ def Cookandstorecoordinate(rawcoordinate):
 		dict_coordinate [waypointname] = [waypointlatitude, waypointlongitude]
 	return
 
-###读取csv航路点坐标列表
+### 读取csv航路点坐标列表
 def Readcoordinates(readICAOcode):
 	dict_coordinate = {}
 	list_coordinates = []
@@ -97,11 +94,10 @@ def Readcoordinates(readICAOcode):
 				index_value += 3
 				dict_coordinate [list_coordinates[index_key]] = list_temporary
 				index_key += 3
-	print(dict_coordinate)
 	print("{}航路点坐标列表读取成功！".format(readICAOcode))
 	return dict_coordinate
 
-###导出csv航路点坐标列表
+### 导出csv航路点坐标列表
 def Savecoordinates(saveICAOcode, data):
 	list_coordinates = []
 	csvgenerating = True
@@ -124,15 +120,26 @@ def Savecoordinates(saveICAOcode, data):
 		writer.writerows(list_coordinates)
 	return print("{}航路点坐标列表已成功导出到程序所在目录！".format(saveICAOcode))
 
-#主程序
-###航路点
+### 生成程序列表：
+def Generateprocedurelist(name, next_identifier):
+	list_procedure.append("Procedure.{}={}.{}".format(index_procedure, name, next_identifier))
+
+### 生成PI航段
+#def Leg_PI(data):
+
+
+
+
+# 主程序
+### 航路点
+status_coordinate = True
 print('先将航路点名称和坐标录入程序！')
 print('在本部分输入如下指令可使用额外功能：')
-print('[read]----读取csv航路点列表\n[save]----导出csv航路点列表\n[finish]--结束坐标输入并开始编写程序')
+print('[read]----读取csv航路点列表\n[save]----导出csv航路点列表\n[done]----结束坐标输入并开始编写程序')
 print('输入格式：[航路点名称] [纬度 度] [纬度 分] [【此项选填】纬度 秒] [经度 度] [经度 分] [【此项选填】经度 秒]')
 print('注意各项之间以空格分开')
 print('让我们开始吧ovo\n请输入航点和坐标：')
-status_coordinate = True
+dict_coordinate = {'名称':['纬度', '经度']}
 while status_coordinate:
 	rawcoordinate = input().upper()
 	while not Checkcoordinate(rawcoordinate):
@@ -147,8 +154,33 @@ while status_coordinate:
 		while saveICAOcode == "":
 			ICAOcode = input("机场ICAO代码不能为空！请重新输入：").upper()
 		Savecoordinates(saveICAOcode, dict_coordinate)
-	elif rawcoordinate == "FINISH":
+	elif rawcoordinate == "DONE":
 		for key_dict, value_dict in dict_coordinate.items():
 			print('{:^5}\t{:^10}\t{:^11}'.format(key_dict, value_dict[0], value_dict[1]))
 			status_coordinate = False
 	Cookandstorecoordinate(rawcoordinate)
+
+### 生成程序列表
+status_list = True
+print("\n航路点坐标现已暂存，下面开始生成程序列表！")
+print('在本部分输入如下指令可使用额外功能：')
+print('[done]----结束坐标输入并选择模式')
+index_procedure = 0
+list_procedure = ['[list]']
+while status_list:
+	name_procedure = input("程序：").upper()
+	if name_procedure == "DONE":
+		status_list = False
+		for item_procedure in list_procedure:
+			print(item_procedure)
+	else:
+		next_identifier = input("链接到：").upper()
+		Generateprocedurelist(name_procedure, next_identifier)
+		index_procedure += 1
+
+### 编写程序
+#status_leg = True
+#print("\n程序列表现已暂存，下面开始写程序！")
+#print('在本部分输入如下指令可使用额外功能：')
+#print('[ok]------结束编写当前程序，开始编写下一程序')
+#print('[done]----结束程序编写并导出程序')
