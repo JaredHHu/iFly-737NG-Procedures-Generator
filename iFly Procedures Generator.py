@@ -8,13 +8,13 @@ list_legtype = ['PI', 'HA', 'HF', 'HM', 'FM', 'VM', 'AF', 'CA', 'VA', 'CD', 'VD'
 
 # 软件信息
 print('iFly飞行程序数据文件生成器\n')
-print('当前版本：3.0.1 beta\n')
+print('当前版本：\n')
 print('更新日志：')
 print('1.0.0  2022.04.22  实现坐标的检查、转换、读取和存储')
 print('2.0.0  2022.04.23  实现程序列表的检查、排序和生成')
 print('3.0.1  2022.04.23  实现根据航段类型生成程序')
 print('                   实现合并数据，分类导出')
-print('\nGithub仓库和编写教程：https://github.com/JaredHHu/iFly-737NG-Procedures-Generator\n')
+print('                   修复一堆bug')
 
 # 函数
 ### 检查输入航路点正确与否
@@ -66,7 +66,7 @@ def Checkcoordinate(rawcoordinate):
 def Checkprocedurelist(procedure):
 	list_inputproc = procedure.split()
 	name = list_inputproc[0]
-	if name == 'DONE' or name == 'OK':
+	if name == 'DONE' or name == 'OK' or name == 'SAVE' or name == 'READ':
 		return True
 	elif len(list_inputproc) == 2:
 		next = list_inputproc[1]
@@ -103,7 +103,7 @@ def Readcoordinates(ICAOcode):
 	list_coordinates = []
 	dictgenerating = True
 	index_key, index_value = 0, 1
-	with open("{}.csv".format(ICAOcode), 'r') as csvfile:
+	with open("Waypoint_{}.csv".format(ICAOcode), 'r') as csvfile:
 		reader = csv.reader(csvfile)
 		for row in reader:
 			list_coordinates.append(row)
@@ -138,7 +138,7 @@ def Savecoordinates(ICAOcode, dict):
 		list_coordinates += [list_temporary]
 		if index_key == len(list_keys):
 			csvgenerating = False
-	with open("{}.csv".format(ICAOcode), "w", newline="") as csvfile:
+	with open("Waypoint_{}.csv".format(ICAOcode), "w", newline="") as csvfile:
 		writer = csv.writer(csvfile)
 		writer.writerows(list_coordinates)
 	return print("{}航路点坐标列表已成功导出到程序所在目录！".format(ICAOcode))
@@ -152,69 +152,82 @@ def Generateprocedurelist(procedure):
 
 ### 航段类型识别
 def Leg_classify(legtype):
-	if legtype in list_legtype:
-		print('带"*"项目选填')
-		if legtype == 'PI':
-			print('模式暂不可用')
-			legdata = ['{}航段暂无法生成'.format(legtype)]
-			#legdata = Leg_PI(legtype)
-		elif legtype == 'HA' or legtype == 'HF' or legtype == 'HM':
-			legdata = Leg_HAHFHM(legtype)
-		elif legtype == 'FM' or legtype == 'VM':
-			print('模式暂不可用')
-			legdata = ['{}航段暂无法生成'.format(legtype)]
-			#legdata = Leg_FMVM(legtype)
-		elif legtype == 'AF':
-			legdata = Leg_AF(legtype)
-		elif legtype == 'CA' or legtype == 'VA':
-			legdata = Leg_CAVA(legtype)
-		elif legtype == 'CD' or legtype == 'VD':
-			print('模式暂不可用')
-			legdata = ['{}航段暂无法生成'.format(legtype)]
-			#legdata = Leg_CDVD(legtype)
-		elif legtype == 'CF':
-			legdata = Leg_CF(legtype)
-		elif legtype == 'CI' or legtype == 'VI':
-			print('模式暂不可用')
-			legdata = ['{}航段暂无法生成'.format(legtype)]
-			#legdata = Leg_CIVI(legtype)
-		elif legtype == 'CR' or legtype == 'VR':
-			print('模式暂不可用')
-			legdata = ['{}航段暂无法生成'.format(legtype)]
-			#legdata = Leg_CRVR(legtype)
-		elif legtype == 'DF':
-			legdata = Leg_DF(legtype)
-		elif legtype == 'FA':
-			print('模式暂不可用')
-			legdata = ['{}航段暂无法生成'.format(legtype)]
-			#legdata = Leg_FA(legtype)
-		elif legtype == 'FC':
-			print('模式暂不可用')
-			legdata = ['{}航段暂无法生成'.format(legtype)]
-			#legdata = Leg_FC(legtype)
-		elif legtype == 'FD':
-			print('模式暂不可用')
-			legdata = ['{}航段暂无法生成'.format(legtype)]
-			#legdata = Leg_FD(legtype)
-		elif legtype == 'RF':
-			legdata = Leg_RF(legtype)
-		elif legtype == 'TF' or legtype == 'IF':
-			legdata = Leg_TFIF(legtype)
-	return legdata
+	if legtype == 'PI':
+		print('模式暂不可用')
+		legdata = ['{}航段暂无法生成'.format(legtype)]
+		#legdata = Leg_PI(legtype)
+		return legdata
+	elif legtype == 'HA' or legtype == 'HF' or legtype == 'HM':
+		legdata = Leg_HAHFHM(legtype)
+		return legdata
+	elif legtype == 'FM' or legtype == 'VM':
+		print('模式暂不可用')
+		legdata = ['{}航段暂无法生成'.format(legtype)]
+		#legdata = Leg_FMVM(legtype)
+		return legdata
+	elif legtype == 'AF':
+		legdata = Leg_AF(legtype)
+		return legdata
+	elif legtype == 'CA' or legtype == 'VA':
+		legdata = Leg_CAVA(legtype)
+		return legdata
+	elif legtype == 'CD' or legtype == 'VD':
+		print('模式暂不可用')
+		legdata = ['{}航段暂无法生成'.format(legtype)]
+		#legdata = Leg_CDVD(legtype)
+		return legdata
+	elif legtype == 'CF':
+		legdata = Leg_CF(legtype)
+		return legdata
+	elif legtype == 'CI' or legtype == 'VI':
+		print('模式暂不可用')
+		legdata = ['{}航段暂无法生成'.format(legtype)]
+		#legdata = Leg_CIVI(legtype)
+		return legdata
+	elif legtype == 'CR' or legtype == 'VR':
+		print('模式暂不可用')
+		legdata = ['{}航段暂无法生成'.format(legtype)]
+		#legdata = Leg_CRVR(legtype)
+		return legdata
+	elif legtype == 'DF':
+		legdata = Leg_DF(legtype)
+		return legdata
+	elif legtype == 'FA':
+		print('模式暂不可用')
+		legdata = ['{}航段暂无法生成'.format(legtype)]
+		#legdata = Leg_FA(legtype)
+		return legdata
+	elif legtype == 'FC':
+		print('模式暂不可用')
+		legdata = ['{}航段暂无法生成'.format(legtype)]
+		#legdata = Leg_FC(legtype)
+		return legdata
+	elif legtype == 'FD':
+		print('模式暂不可用')
+		legdata = ['{}航段暂无法生成'.format(legtype)]
+		#legdata = Leg_FD(legtype)
+		return legdata
+	elif legtype == 'RF':
+		legdata = Leg_RF(legtype)
+		return legdata
+	elif legtype == 'TF' or legtype == 'IF':
+		legdata = Leg_TFIF(legtype)
+		return legdata
+
 
 ### 根据航路点名称自动获取坐标
 def Getcoordinate():
-	waypoint = input('航路点名称：')
+	waypoint = input('航路点名称：').upper()
 	while waypoint not in dict_coordinate:
-		waypoint = input('该航路点不存在于数据库中，请重新输入：')
+		waypoint = input('该航路点不存在于数据库中，请重新输入：').upper()
 	list_wpt = ['{}'.format(waypoint)] + dict_coordinate.get(waypoint)
 	return list_wpt
 
 ### 根据中心点名称自动获取坐标
 def Getcentercoordinate():
-	centerwaypoint = input('RF航段中心点名称：')
+	centerwaypoint = input('RF航段中心点名称：').upper()
 	while centerwaypoint not in dict_coordinate:
-		centerwaypoint = input('该航路点不存在于数据库中，请重新输入：')
+		centerwaypoint = input('该航路点不存在于数据库中，请重新输入：').upper()
 	list_ctrwpt = dict_coordinate.get(centerwaypoint)
 	return list_ctrwpt
 
@@ -224,9 +237,9 @@ def Leg_HAHFHM(legtype):
 	coordinate = Getcoordinate()
 	cross = input('*飞越填1：')
 	heading = input('磁航向：')
-	turn = input('转弯指示(L/R)：')
-	altitude = input('*英尺高度：')
-	speed = input('*速度限制(节)：')
+	turn = input('转弯指示(L/R)：').upper()
+	altitude = input('*英尺高度：').upper()
+	speed = input('*速度限制(节)：').upper()
 	dist = input('等待边距离(海里)或时间(分钟×10000)：')
 	list_legdata.append('Name={}'.format(coordinate[0]))
 	list_legdata.append('Latitude={}'.format(coordinate[1]))
@@ -247,11 +260,11 @@ def Leg_HAHFHM(legtype):
 def Leg_AF(legtype):
 	list_legdata = ['Leg=AF']
 	coordinate = Getcoordinate()
-	frequency = input('DME台代码：')
+	frequency = input('DME台代码：').upper()
 	navdist = input('相对DME台距离(海里)：')
 	cross = input('*飞越填1：')
-	altitude = input('*英尺高度：')
-	speed = input('*速度限制(节)：')
+	altitude = input('*英尺高度：').upper()
+	speed = input('*速度限制(节)：').upper()
 	list_legdata.append('Name={}'.format(coordinate[0]))
 	list_legdata.append('Latitude={}'.format(coordinate[1]))
 	list_legdata.append('Longitude={}'.format(coordinate[2]))
@@ -269,8 +282,8 @@ def Leg_AF(legtype):
 def Leg_CAVA(legtype):
 	list_legdata = ['Leg={}'.format(legtype)]
 	heading = input('磁航向：')
-	altitude = input('英尺高度：')
-	speed = input('*速度限制(节)：')
+	altitude = input('英尺高度：').upper()
+	speed = input('*速度限制(节)：').upper()
 	list_legdata.append('Heading={}'.format(heading))
 	list_legdata.append('Altitude={}'.format(altitude))
 	if speed != '':
@@ -283,8 +296,8 @@ def Leg_CF(legtype):
 	coordinate = Getcoordinate()
 	cross = input('*飞越填1：')
 	heading = input('磁航向：')
-	altitude = input('*英尺高度：')
-	speed = input('*速度限制(节)：')
+	altitude = input('*英尺高度：').upper()
+	speed = input('*速度限制(节)：').upper()
 	list_legdata.append('Name={}'.format(coordinate[0]))
 	list_legdata.append('Latitude={}'.format(coordinate[1]))
 	list_legdata.append('Longitude={}'.format(coordinate[2]))
@@ -302,9 +315,9 @@ def Leg_DF(legtype):
 	list_legdata = ['Leg=DF']
 	coordinate = Getcoordinate()
 	cross = input('*飞越填1：')
-	turn = input('*转弯指示(L/R)：')
-	altitude = input('*英尺高度：')
-	speed = input('*速度限制(节)')
+	turn = input('*转弯指示(L/R)：').upper()
+	altitude = input('*英尺高度：').upper()
+	speed = input('*速度限制(节)：').upper()
 	list_legdata.append('Name={}'.format(coordinate[0]))
 	list_legdata.append('Latitude={}'.format(coordinate[1]))
 	list_legdata.append('Longitude={}'.format(coordinate[2]))
@@ -323,9 +336,9 @@ def Leg_RF(legtype):
 	list_legdata = ['Leg=RF']
 	coordinate = Getcoordinate()
 	heading = input('*磁航向：')
-	turn = input('*转弯指示(L/R)：')
-	altitude = input('*英尺高度：')
-	speed = input('*速度限制(节)：')
+	turn = input('*转弯指示(L/R)：').upper()
+	altitude = input('*英尺高度：').upper()
+	speed = input('*速度限制(节)：').upper()
 	centercoordinate = Getcentercoordinate()
 	list_legdata.append('Name={}'.format(coordinate[0]))
 	list_legdata.append('Latitude={}'.format(coordinate[1]))
@@ -347,8 +360,8 @@ def Leg_TFIF(legtype):
 	list_legdata = ['Leg={}'.format(legtype)]
 	coordinate = Getcoordinate()
 	cross = input('*飞越填1：')
-	altitude = input('*英尺高度：')
-	speed = input('*速度限制(节)')
+	altitude = input('*英尺高度：').upper()
+	speed = input('*速度限制(节)：').upper()
 	mapt = input('*复飞点填1：')
 	slope = input('*航径坡度：')
 	list_legdata.append('Name={}'.format(coordinate[0]))
@@ -369,7 +382,7 @@ def Leg_TFIF(legtype):
 # 主程序
 ### 航路点
 status_coordinate = True
-print('先将航路点名称和坐标录入程序！')
+print('\n先将航路点名称和坐标录入程序！')
 print('在本部分输入如下指令可使用额外功能：')
 print('[read]----读取csv航路点列表\n[save]----导出csv航路点列表\n[done]----结束坐标输入并开始编写程序')
 print('输入格式：[航路点名称] [纬度 度] [纬度 分] 【纬度 秒】 [经度 度] [经度 分] 【经度 秒】')
@@ -440,29 +453,32 @@ list_procdata = []
 while status_leg:
 	status_procdata = True
 	index_procdata = 0
-	procname = input().upper()
+	procname = input('程序名称和下一程序或跑道：').upper()
 	#if procname == 'SUPP':
 
 	while not Checkprocedurelist(procname):
-		procname = input().upper()
-	if procname == 'DONE':
-		status_leg = False
-		print('\n程序现已暂存，下面选择想输出的数据类型并导出！')
-	else:
-		if procname == 'OK':
+		procname = input('错误，请重新输入程序名称和下一程序或跑道：').upper()
+	list_procname = procname.split()
+	data_name = list_procname[0]
+	data_next = list_procname[1]
+	index_data = 0
+	while status_procdata:
+		legtype = input('航段类型：').upper()
+		while legtype not in list_legtype and legtype != 'OK' and legtype != 'DONE':
+			legtype = input('错误，请重新输入航段类型：').upper()
+		print('带"*"项目选填')
+		if legtype == 'OK':
 			status_procdata = False
 			print('\n此段程序现已暂存，开始输入下一段程序！')
+		elif legtype == 'DONE':
+			status_procdata = False
+			status_leg = False
+			print('\n程序现已暂存，下面选择想输出的数据类型并导出！')
 		else:
-			list_procname = procname.split()
-			data_name = list_procname[0]
-			data_next = list_procname[1]
-			index_data = 0
-			while status_procdata:
-				list_procdata.append('[{}.{}.{}]'.format(data_name, data_next, index_data))
-				legtype = input('航段类型：')
-				legdata = Leg_classify(legtype)
-				list_procdata.extend(legdata)
-				index_data += 1
+			list_procdata.append('[{}.{}.{}]'.format(data_name, data_next, index_data))
+			legdata = Leg_classify(legtype)
+			list_procdata.extend(legdata)
+			index_data += 1
 
 ###输出数据
 status_output = True
@@ -470,30 +486,32 @@ print('可输出文件类型：\n[txt]--.txt\n[sid]--.sid\n[sidtrs]--.sidtrs\n[s
 list_output = []
 list_output.extend(list_procedure)
 list_output.extend(list_procdata)
-ICAOcode = input('机场ICAO代码：').upper()
 filetype = input('输出文件类型：').upper()
+ICAOcode = input('机场ICAO代码：').upper()
 with open('{}.txt'.format(ICAOcode), 'w') as file_output:
-	file_output.writelines(list_output)
-	if filetype == 'SID':
-		os.rename('{}.txt'.format(ICAOcode), '{}.sid'.format(ICAOcode))
-		print('数据已保存为 .sid 格式！')
-		status_output = False
-	elif filetype == 'SIDTRS':
-		os.rename('{}.txt'.format(ICAOcode), '{}.sidtrs'.format(ICAOcode))
-		print('数据已保存为 .sidtrs 格式！')
-		status_output = False
-	elif filetype == 'STAR':
-		os.rename('{}.txt'.format(ICAOcode), '{}.star'.format(ICAOcode))
-		print('数据已保存为 .star 格式！')
-		status_output = False
-	elif filetype == 'STARTRS':
-		os.rename('{}.txt'.format(ICAOcode), '{}.startrs'.format(ICAOcode))
-		print('数据已保存为 .startrs 格式！')
-		status_output = False
-	elif filetype == 'APP':
-		os.rename('{}.txt'.format(ICAOcode), '{}.app'.format(ICAOcode))
-		print('数据已保存为 .app 格式！')
-		status_output = False
-	else:
-		print('数据已保存为 .txt 格式！')
-		status_output = False
+	for item in list_output:
+		file_output.write(item)
+		file_output.write('\n')
+if filetype == 'SID':
+	os.rename('{}.txt'.format(ICAOcode), '{}.sid'.format(ICAOcode))
+	print('数据已保存为 {}.sid'.format(ICAOcode))
+	status_output = False
+elif filetype == 'SIDTRS':
+	os.rename('{}.txt'.format(ICAOcode), '{}.sidtrs'.format(ICAOcode))
+	print('数据已保存为 {}.sidtrs'.format(ICAOcode))
+	status_output = False
+elif filetype == 'STAR':
+	os.rename('{}.txt'.format(ICAOcode), '{}.star'.format(ICAOcode))
+	print('数据已保存为 {}.star'.format(ICAOcode))
+	status_output = False
+elif filetype == 'STARTRS':
+	os.rename('{}.txt'.format(ICAOcode), '{}.startrs'.format(ICAOcode))
+	print('数据已保存为 {}.startrs'.format(ICAOcode))
+	status_output = False
+elif filetype == 'APP':
+	os.rename('{}.txt'.format(ICAOcode), '{}.app'.format(ICAOcode))
+	print('数据已保存为 {}.app'.format(ICAOcode))
+	status_output = False
+else:
+	print('数据已保存为 {}.txt'.format(ICAOcode))
+	status_output = False
