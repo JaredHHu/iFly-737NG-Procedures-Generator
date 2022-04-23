@@ -8,13 +8,15 @@ list_legtype = ['PI', 'HA', 'HF', 'HM', 'FM', 'VM', 'AF', 'CA', 'VA', 'CD', 'VD'
 
 # 软件信息
 print('iFly飞行程序数据文件生成器\n')
-print('当前版本：\n')
+print('当前版本：3.0.0\n')
 print('更新日志：')
 print('1.0.0  2022.04.22  实现坐标的检查、转换、读取和存储')
 print('2.0.0  2022.04.23  实现程序列表的检查、排序和生成')
-print('3.0.1  2022.04.23  实现根据航段类型生成程序')
+print('3.0.0  2022.04.23  实现根据航段类型生成程序')
 print('                   实现合并数据，分类导出')
 print('                   修复一堆bug')
+print('3.1.0  2022.04.24  实现程序列表的读取和存储')
+print('© 2022 JaredHHu.')
 
 # 函数
 ### 检查输入航路点正确与否
@@ -103,7 +105,7 @@ def Readcoordinates(ICAOcode):
 	list_coordinates = []
 	dictgenerating = True
 	index_key, index_value = 0, 1
-	with open("Waypoint_{}.csv".format(ICAOcode), 'r') as csvfile:
+	with open('Waypoint_{}.csv'.format(ICAOcode), 'r') as csvfile:
 		reader = csv.reader(csvfile)
 		for row in reader:
 			list_coordinates.append(row)
@@ -138,10 +140,28 @@ def Savecoordinates(ICAOcode, dict):
 		list_coordinates += [list_temporary]
 		if index_key == len(list_keys):
 			csvgenerating = False
-	with open("Waypoint_{}.csv".format(ICAOcode), "w", newline="") as csvfile:
+	with open('Waypoint_{}.csv'.format(ICAOcode), 'w', newline='') as csvfile:
 		writer = csv.writer(csvfile)
 		writer.writerows(list_coordinates)
-	return print("{}航路点坐标列表已成功导出到程序所在目录！".format(ICAOcode))
+	return print('{}航路点坐标列表已成功导出到程序所在目录！'.format(ICAOcode))
+
+### 读取txt程序列表
+def Readproclist(ICAOcode):
+	with open('List_{}.txt'.format(ICAOcode, 'r')) as file:
+		list_procedure = file.read().splitlines()
+		return list_procedure
+
+### 导出txt程序列表
+def Saveproclist(ICAOcode, proclist):
+	index_procedure = 0
+	proclist.sort()
+	with open('List_{}.txt'.format(ICAOcode), 'w') as file:
+		file.write('[list]')
+		file.write('\n')
+		for item_tempproc in proclist:
+			file.write('Procedure.{}={}'.format(index_procedure, item_tempproc))
+			file.write('\n')
+			index_procedure += 1
 
 ### 生成程序列表：
 def Generateprocedurelist(procedure):
@@ -213,7 +233,6 @@ def Leg_classify(legtype):
 	elif legtype == 'TF' or legtype == 'IF':
 		legdata = Leg_TFIF(legtype)
 		return legdata
-
 
 ### 根据航路点名称自动获取坐标
 def Getcoordinate():
@@ -379,6 +398,30 @@ def Leg_TFIF(legtype):
 		list_legdata.append('Slope={}'.format(slope))
 	return list_legdata
 
+### 输出结果
+def Outputdata(filetype, ICAOcode, data):
+	with open('{}.txt'.format(ICAOcode), 'w') as file_output:
+		for item in data:
+			file_output.write(item)
+			file_output.write('\n')
+	if filetype == 'SID':
+		os.rename('{}.txt'.format(ICAOcode), '{}.sid'.format(ICAOcode))
+		print('数据已保存为 {}.sid'.format(ICAOcode))
+	elif filetype == 'SIDTRS':
+		os.rename('{}.txt'.format(ICAOcode), '{}.sidtrs'.format(ICAOcode))
+		print('数据已保存为 {}.sidtrs'.format(ICAOcode))
+	elif filetype == 'STAR':
+		os.rename('{}.txt'.format(ICAOcode), '{}.star'.format(ICAOcode))
+		print('数据已保存为 {}.star'.format(ICAOcode))
+	elif filetype == 'STARTRS':
+		os.rename('{}.txt'.format(ICAOcode), '{}.startrs'.format(ICAOcode))
+		print('数据已保存为 {}.startrs'.format(ICAOcode))
+	elif filetype == 'APP':
+		os.rename('{}.txt'.format(ICAOcode), '{}.app'.format(ICAOcode))
+		print('数据已保存为 {}.app'.format(ICAOcode))
+	else:
+		print('数据已保存为 {}.txt'.format(ICAOcode))
+
 # 主程序
 ### 航路点
 status_coordinate = True
@@ -415,7 +458,7 @@ while status_coordinate:
 ### 生成程序列表
 status_list = True
 print('在本部分输入如下指令可使用额外功能：')
-print('[done]----结束坐标输入并选择模式')
+print('[read]----读取txt程序列表\n[save]----导出txt程序列表\n[done]----结束坐标输入并选择模式')
 print('输入格式：[当前程序名] [链接的程序或跑道]')
 print('注意各项之间以空格分开')
 print('针对进近程序的代码说明：[R]--RNP  [I]--ILS  [V]--VOR  [N]--NDB')
@@ -428,15 +471,23 @@ while status_list:
 	procedurelist = input().upper()
 	while not Checkprocedurelist(procedurelist):
 		procedurelist = input().upper()
-	if procedurelist == "DONE":
+	if procedurelist == 'DONE':
 		list_tempproc.sort()
 		for item_tempproc in list_tempproc:
-			list_procedure.append("Procedure.{}={}".format(index_procedure, item_tempproc))
+			list_procedure.append('Procedure.{}={}'.format(index_procedure, item_tempproc))
 			index_procedure += 1
 		status_list = False
 		for item_procedure in list_procedure:
 			print(item_procedure)
-		print("\n程序列表现已暂存，下面开始写程序！")
+		print('\n程序列表现已暂存，下面开始写程序！')
+	elif procedurelist == 'READ':
+		readICAOcode = input('机场ICAO代码：').upper()
+		list_procedure = Readproclist(readICAOcode)
+		print('{}程序列表读取成功！'.format(readICAOcode))
+	elif procedurelist == 'SAVE':
+		saveICAOcode = input('机场ICAO代码：').upper()
+		Saveproclist(saveICAOcode, list_tempproc)
+		print('{}程序列表已成功导出到程序所在目录！'.format(saveICAOcode))
 	else:
 		Generateprocedurelist(procedurelist)
 
@@ -488,30 +539,4 @@ list_output.extend(list_procedure)
 list_output.extend(list_procdata)
 filetype = input('输出文件类型：').upper()
 ICAOcode = input('机场ICAO代码：').upper()
-with open('{}.txt'.format(ICAOcode), 'w') as file_output:
-	for item in list_output:
-		file_output.write(item)
-		file_output.write('\n')
-if filetype == 'SID':
-	os.rename('{}.txt'.format(ICAOcode), '{}.sid'.format(ICAOcode))
-	print('数据已保存为 {}.sid'.format(ICAOcode))
-	status_output = False
-elif filetype == 'SIDTRS':
-	os.rename('{}.txt'.format(ICAOcode), '{}.sidtrs'.format(ICAOcode))
-	print('数据已保存为 {}.sidtrs'.format(ICAOcode))
-	status_output = False
-elif filetype == 'STAR':
-	os.rename('{}.txt'.format(ICAOcode), '{}.star'.format(ICAOcode))
-	print('数据已保存为 {}.star'.format(ICAOcode))
-	status_output = False
-elif filetype == 'STARTRS':
-	os.rename('{}.txt'.format(ICAOcode), '{}.startrs'.format(ICAOcode))
-	print('数据已保存为 {}.startrs'.format(ICAOcode))
-	status_output = False
-elif filetype == 'APP':
-	os.rename('{}.txt'.format(ICAOcode), '{}.app'.format(ICAOcode))
-	print('数据已保存为 {}.app'.format(ICAOcode))
-	status_output = False
-else:
-	print('数据已保存为 {}.txt'.format(ICAOcode))
-	status_output = False
+Outputdata(filetype, ICAOcode, list_output)
