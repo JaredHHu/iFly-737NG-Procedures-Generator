@@ -8,7 +8,7 @@ list_legtype = ['PI', 'HA', 'HF', 'HM', 'FM', 'VM', 'AF', 'CA', 'VA', 'CD', 'VD'
 
 # 软件信息
 print('iFly Jets ADV Series 飞行程序数据文件生成器\n')
-print('当前版本：3.1.\n')
+print('当前版本：3.1.1\n')
 print('更新日志：')
 print('1.0.0  2022.04.22  实现坐标的检查、转换、读取和存储')
 print('2.0.0  2022.04.23  实现程序列表的检查、排序和生成')
