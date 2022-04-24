@@ -458,7 +458,7 @@ while status_coordinate:
 ### 生成程序列表
 status_list = True
 print('在本部分输入如下指令可使用额外功能：')
-print('[read]----读取程序列表\n[save]----导出程序列表[done]----结束坐标输入并选择模式')
+print('[read]----读取程序列表\n[save]----导出程序列表\n[done]----结束坐标输入并选择模式')
 print('输入格式：[当前程序名] [链接的程序或跑道]')
 print('注意各项之间以空格分开')
 print('针对进近程序的代码说明：[R]--RNP  [I]--ILS  [V]--VOR  [N]--NDB')
