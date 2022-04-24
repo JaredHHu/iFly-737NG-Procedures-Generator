@@ -14,8 +14,9 @@ print('1.0.0  2022.04.22  实现坐标的检查、转换、读取和存储')
 print('2.0.0  2022.04.23  实现程序列表的检查、排序和生成')
 print('3.0.0  2022.04.23  实现根据航段类型生成程序')
 print('                   实现合并数据，分类导出')
-print('3.1.1  2022.04.24  实现程序列表的读取和存储')
+print('3.1.0  2022.04.24  实现程序列表的读取和存储')
 print('                   修复一堆bug')
+print('3.1.1  2022.04.25  修复程序列表存储后再读取会出现程序重复的问题')
 
 # 函数
 ### 检查输入航路点正确与否
@@ -457,7 +458,7 @@ while status_coordinate:
 ### 生成程序列表
 status_list = True
 print('在本部分输入如下指令可使用额外功能：')
-print('[done]----结束坐标输入并选择模式')
+print('[read]----读取程序列表\n[save]----导出程序列表[done]----结束坐标输入并选择模式')
 print('输入格式：[当前程序名] [链接的程序或跑道]')
 print('注意各项之间以空格分开')
 print('针对进近程序的代码说明：[R]--RNP  [I]--ILS  [V]--VOR  [N]--NDB')
@@ -482,6 +483,7 @@ while status_list:
 	elif procedurelist == 'READ':
 		readICAOcode = input('机场ICAO代码：').upper()
 		list_procedure = Readproclist(readICAOcode)
+		list_tempproc = []
 		print('{}程序列表读取成功！'.format(readICAOcode))
 	elif procedurelist == 'SAVE':
 		saveICAOcode = input('机场ICAO代码：').upper()
