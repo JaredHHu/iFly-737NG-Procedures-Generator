@@ -7,16 +7,15 @@ list_legtype = ['PI', 'HA', 'HF', 'HM', 'FM', 'VM', 'AF', 'CA', 'VA', 'CD', 'VD'
 				'CI', 'VI', 'CR', 'VR', 'DF', 'FA', 'FC', 'FD', 'RF', 'TF', 'IF']
 
 # 软件信息
-print('iFly飞行程序数据文件生成器\n')
-print('当前版本：3.0.0\n')
+print('iFly Jets ADV Series 飞行程序数据文件生成器\n')
+print('当前版本：3.1.\n')
 print('更新日志：')
 print('1.0.0  2022.04.22  实现坐标的检查、转换、读取和存储')
 print('2.0.0  2022.04.23  实现程序列表的检查、排序和生成')
 print('3.0.0  2022.04.23  实现根据航段类型生成程序')
 print('                   实现合并数据，分类导出')
+print('3.1.1  2022.04.24  实现程序列表的读取和存储')
 print('                   修复一堆bug')
-print('3.1.0  2022.04.24  实现程序列表的读取和存储')
-print('© 2022 JaredHHu.')
 
 # 函数
 ### 检查输入航路点正确与否
@@ -458,7 +457,7 @@ while status_coordinate:
 ### 生成程序列表
 status_list = True
 print('在本部分输入如下指令可使用额外功能：')
-print('[read]----读取txt程序列表\n[save]----导出txt程序列表\n[done]----结束坐标输入并选择模式')
+print('[done]----结束坐标输入并选择模式')
 print('输入格式：[当前程序名] [链接的程序或跑道]')
 print('注意各项之间以空格分开')
 print('针对进近程序的代码说明：[R]--RNP  [I]--ILS  [V]--VOR  [N]--NDB')
