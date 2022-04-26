@@ -5,19 +5,27 @@ import os
 #基本信息
 list_legtype = ['PI', 'HA', 'HF', 'HM', 'FM', 'VM', 'AF', 'CA', 'VA', 'CD', 'VD', 'CF',
 				'CI', 'VI', 'CR', 'VR', 'DF', 'FA', 'FC', 'FD', 'RF', 'TF', 'IF']
+list_filetype = ['TXT', 'SID', 'SIDTRS', 'STAR', 'STARTRS', 'APP', 'APPTRS', 'SUPP']
+list_turn = ['', 'L', 'R']
+list_one = ['', '1']
 
 # 软件信息
 print('iFly Jets ADV Series 飞行程序数据文件生成器\n')
-print('当前版本：3.1.2\n')
+print('当前版本：3.1.3\n')
 print('更新日志：')
 print('1.0.0  2022.04.22  实现坐标的检查、转换、读取和存储')
 print('2.0.0  2022.04.23  实现程序列表的检查、排序和生成')
 print('3.0.0  2022.04.23  实现根据航段类型生成程序')
 print('                   实现合并数据，分类导出')
 print('3.1.0  2022.04.24  实现程序列表的读取和存储')
-print('                   修复一堆bug')
+print('                   修复一堆 bug')
 print('3.1.1  2022.04.25  修复程序列表存储后再读取会出现程序重复的问题')
 print('3.1.2  2022.04.26  修复部分输入为空时程序闪退的问题')
+print('3.1.3  2022.04.27  实现对文件类型、转弯方向、0或1输入的检查与限制')
+print('                   修复部分会导致闪退的 bug')
+print('                   修复导出类型无法输入的 bug')
+print('                   修复不能导出 .apptrs 文件的 bug')
+print('                   调整文本排版')
 
 # 函数
 ### 检查输入航路点正确与否
@@ -144,7 +152,7 @@ def Savecoordinates(ICAOcode, dict):
 	with open('Waypoint_{}.csv'.format(ICAOcode), 'w', newline='') as csvfile:
 		writer = csv.writer(csvfile)
 		writer.writerows(list_coordinates)
-	return print('{}航路点坐标列表已成功导出到程序所在目录！'.format(ICAOcode))
+	return print('{} 航路点坐标列表已成功导出到程序所在目录！'.format(ICAOcode))
 
 ### 读取txt程序列表
 def Readproclist(ICAOcode):
@@ -239,7 +247,7 @@ def Leg_classify(legtype):
 def Getcoordinate():
 	waypoint = input('航路点名称：').upper()
 	while waypoint not in dict_coordinate:
-		waypoint = input('该航路点不存在于数据库中，请重新输入：').upper()
+		waypoint = input('该航路点不存在于数据库中！航路点名称：').upper()
 	list_wpt = ['{}'.format(waypoint)] + dict_coordinate.get(waypoint)
 	return list_wpt
 
@@ -247,7 +255,7 @@ def Getcoordinate():
 def Getcentercoordinate():
 	centerwaypoint = input('RF航段中心点名称：').upper()
 	while centerwaypoint not in dict_coordinate:
-		centerwaypoint = input('该航路点不存在于数据库中，请重新输入：').upper()
+		centerwaypoint = input('该航路点不存在于数据库中！RF航段中心点名称：').upper()
 	list_ctrwpt = dict_coordinate.get(centerwaypoint)
 	return list_ctrwpt
 
@@ -256,17 +264,19 @@ def Leg_HAHFHM(legtype):
 	list_legdata = ['Leg={}'.format(legtype)]
 	coordinate = Getcoordinate()
 	cross = input('*飞越填1：')
+	while cross not in list_one:
+		cross = input('输入错误！*飞越填1：')
 	heading = input('磁航向：')
 	while heading == "":
-		heading = input('磁航向：')
+		heading = input('不能为空！磁航向：')
 	turn = input('转弯指示(L/R)：').upper()
-	while turn == '':
-		turn = input('转弯指示(L/R)：').upper()
+	while turn not in list_turn:
+		turn = input('输入错误！转弯指示(L/R)：').upper()
 	altitude = input('*英尺高度：').upper()
 	speed = input('*速度限制(节)：').upper()
 	dist = input('等待边距离(海里)或时间(分钟×10000)：')
 	while dist == '':
-		dist = input('等待边距离(海里)或时间(分钟×10000)：')
+		dist = input('不能为空！等待边距离(海里)或时间(分钟×10000)：')
 	list_legdata.append('Name={}'.format(coordinate[0]))
 	list_legdata.append('Latitude={}'.format(coordinate[1]))
 	list_legdata.append('Longitude={}'.format(coordinate[2]))
@@ -288,11 +298,13 @@ def Leg_AF(legtype):
 	coordinate = Getcoordinate()
 	frequency = input('DME台代码：').upper()
 	while frequency == '':
-		frequency = input('DME台代码：').upper()
+		frequency = input('不能为空！DME台代码：').upper()
 	navdist = input('相对DME台距离(海里)：')
 	while navdist == '':
-		navdist = input('相对DME台距离(海里)：')
+		navdist = input('不能为空！相对DME台距离(海里)：')
 	cross = input('*飞越填1：')
+	while cross not in list_one:
+		cross = input('输入错误！*飞越填1：')
 	altitude = input('*英尺高度：').upper()
 	speed = input('*速度限制(节)：').upper()
 	list_legdata.append('Name={}'.format(coordinate[0]))
@@ -312,11 +324,11 @@ def Leg_AF(legtype):
 def Leg_CAVA(legtype):
 	list_legdata = ['Leg={}'.format(legtype)]
 	heading = input('磁航向：')
-	while heading == "":
-		heading = input('磁航向：')
+	while heading == '':
+		heading = input('不能为空！磁航向：')
 	altitude = input('英尺高度：').upper()
 	while altitude == '':
-		altitude = input('英尺高度：').upper()
+		altitude = input('不能为空！英尺高度：').upper()
 	speed = input('*速度限制(节)：').upper()
 	list_legdata.append('Heading={}'.format(heading))
 	list_legdata.append('Altitude={}'.format(altitude))
@@ -329,9 +341,11 @@ def Leg_CF(legtype):
 	list_legdata = ['Leg=CF']
 	coordinate = Getcoordinate()
 	cross = input('*飞越填1：')
+	while cross not in list_one:
+		cross = input('输入错误！*飞越填1：')
 	heading = input('磁航向：')
-	while heading == "":
-		heading = input('磁航向：')
+	while heading == '':
+		heading = input('不能为空！磁航向：')
 	altitude = input('*英尺高度：').upper()
 	speed = input('*速度限制(节)：').upper()
 	list_legdata.append('Name={}'.format(coordinate[0]))
@@ -351,7 +365,11 @@ def Leg_DF(legtype):
 	list_legdata = ['Leg=DF']
 	coordinate = Getcoordinate()
 	cross = input('*飞越填1：')
+	while cross not in list_one:
+		cross = input('输入错误！*飞越填1：')
 	turn = input('*转弯指示(L/R)：').upper()
+	while turn not in list_turn:
+		turn = input('输入错误！*转弯指示(L/R)：').upper()
 	altitude = input('*英尺高度：').upper()
 	speed = input('*速度限制(节)：').upper()
 	list_legdata.append('Name={}'.format(coordinate[0]))
@@ -373,6 +391,8 @@ def Leg_RF(legtype):
 	coordinate = Getcoordinate()
 	heading = input('*磁航向：')
 	turn = input('*转弯指示(L/R)：').upper()
+	while turn not in list_turn:
+		turn = input('输入错误！*转弯指示(L/R)：').upper()
 	altitude = input('*英尺高度：').upper()
 	speed = input('*速度限制(节)：').upper()
 	centercoordinate = Getcentercoordinate()
@@ -396,9 +416,13 @@ def Leg_TFIF(legtype):
 	list_legdata = ['Leg={}'.format(legtype)]
 	coordinate = Getcoordinate()
 	cross = input('*飞越填1：')
+	while cross not in list_one:
+		cross = input('输入错误！*飞越填1：')
 	altitude = input('*英尺高度：').upper()
 	speed = input('*速度限制(节)：').upper()
 	mapt = input('*复飞点填1：')
+	while mapt not in list_one:
+		mapt = input('输入错误！*复飞点填1：')
 	slope = input('*航径坡度：')
 	list_legdata.append('Name={}'.format(coordinate[0]))
 	list_legdata.append('Latitude={}'.format(coordinate[1]))
@@ -436,6 +460,9 @@ def Outputdata(filetype, ICAOcode, data):
 	elif filetype == 'APP':
 		os.rename('{}.txt'.format(ICAOcode), '{}.app'.format(ICAOcode))
 		print('数据已保存为 {}.app'.format(ICAOcode))
+	elif filetype == 'APPTRS':
+		os.rename('{}.txt'.format(ICAOcode), '{}.apptrs'.format(ICAOcode))
+		print('数据已保存为 {}.apptrs'.format(ICAOcode))
 	else:
 		print('数据已保存为 {}.txt'.format(ICAOcode))
 
@@ -444,42 +471,42 @@ def Outputdata(filetype, ICAOcode, data):
 status_coordinate = True
 print('\n先将航路点名称和坐标录入程序！')
 print('在本部分输入如下指令可使用额外功能：')
-print('[read]----读取csv航路点列表\n[save]----导出csv航路点列表\n[done]----结束坐标输入并开始编写程序')
+print('    [read]————读取csv航路点列表\n    [save]————导出csv航路点列表\n    [done]————结束坐标输入并开始编写程序')
 print('输入格式：[航路点名称] [纬度 度] [纬度 分] 【纬度 秒】 [经度 度] [经度 分] 【经度 秒】')
-print('秒数据可不填\n注意各项之间以空格分开')
+print('注意：①秒数据可不填\n     ②各项之间以空格分开')
 print('ovo让我们开始吧：')
 dict_coordinate = {'名称':['纬度', '经度']}
 while status_coordinate:
 	rawcoordinate = input().upper()
 	while not Checkcoordinate(rawcoordinate):
 		rawcoordinate = input().upper()
-	if rawcoordinate == "READ":
-		readICAOcode = input("请输入机场ICAO代码：").upper()
-		while readICAOcode == "":
-			readICAOcode = input("机场ICAO代码不能为空！请重新输入：").upper()
+	if rawcoordinate == 'READ':
+		readICAOcode = input('机场ICAO代码：').upper()
+		while readICAOcode == '':
+			readICAOcode = input('不能为空。机场ICAO代码：').upper()
 		dict_coordinate = Readcoordinates(readICAOcode)
-		print("{}航路点坐标列表读取成功！".format(readICAOcode))
-	elif rawcoordinate == "SAVE":
-		saveICAOcode = input("请输入机场ICAO代码：").upper()
-		while saveICAOcode == "":
-			saveICAOcode = input("机场ICAO代码不能为空！请重新输入：").upper()
+		print('{}航路点坐标列表读取成功！'.format(readICAOcode))
+	elif rawcoordinate == 'SAVE':
+		saveICAOcode = input('机场ICAO代码：').upper()
+		while saveICAOcode == '':
+			saveICAOcode = input('不能为空！机场ICAO代码：').upper()
 		Savecoordinates(saveICAOcode, dict_coordinate)
-	elif rawcoordinate == "DONE":
+	elif rawcoordinate == 'DONE':
 		status_coordinate = False
 		for key_dict, value_dict in dict_coordinate.items():
 			print('{:^5}\t{:^10}\t{:^11}'.format(key_dict, value_dict[0], value_dict[1]))
-		print("\n航路点坐标现已暂存，下面开始生成程序列表！")
+		print('\n航路点坐标现已暂存，下面开始生成程序列表！')
 	else:
 		Cookandstorecoordinate(rawcoordinate)
 
 ### 生成程序列表
 status_list = True
 print('在本部分输入如下指令可使用额外功能：')
-print('[read]----读取程序列表\n[save]----导出程序列表\n[done]----结束坐标输入并选择模式')
+print('    [read]————读取程序列表\n    [save]————导出程序列表\n    [done]————结束坐标输入并选择模式')
 print('输入格式：[当前程序名] [链接的程序或跑道]')
-print('注意各项之间以空格分开')
-print('针对进近程序的代码说明：[R]--RNP  [I]--ILS  [V]--VOR  [N]--NDB')
-print('示例：[I16]--ILS 16  [I32-Z]--ILSZ 32  [R34]--RNP 34')
+print('注意：各项之间以空格分开')
+print('针对进近程序代码的说明：[R]--RNP  [I]--ILS  [V]--VOR  [N]--NDB')
+print('               示例：[I16]--ILS 16  [I32-Z]--ILSZ 32  [R34]--RNP 34')
 print('ovo让我们开始吧：')
 index_procedure = 0
 list_procedure = ['[list]']
@@ -499,24 +526,27 @@ while status_list:
 		print('\n程序列表现已暂存，下面开始写程序！')
 	elif procedurelist == 'READ':
 		readICAOcode = input('机场ICAO代码：').upper()
+		while readICAOcode == '':
+			readICAOcode = input("不能为空。机场ICAO代码：").upper()
 		list_procedure = Readproclist(readICAOcode)
 		list_tempproc = []
 		print('{}程序列表读取成功！'.format(readICAOcode))
 	elif procedurelist == 'SAVE':
 		saveICAOcode = input('机场ICAO代码：').upper()
+		while saveICAOcode == '':
+			saveICAOcode = input("不能为空！机场ICAO代码：").upper()
 		Saveproclist(saveICAOcode, list_tempproc)
-		print('{}程序列表已成功导出到程序所在目录！'.format(saveICAOcode))
+		print('{} 程序列表已成功导出到程序所在目录！'.format(saveICAOcode))
 	else:
 		Generateprocedurelist(procedurelist)
 
 ### 编写程序
 status_leg = True
 print('在本部分输入如下指令可使用额外功能：')
-print('[ok]------结束编写当前程序，开始编写下一程序')
-print('[done]----结束程序编写并导出程序')
+print('    [ok]------结束编写当前程序，开始编写下一程序\n    [done]----结束程序编写并导出程序')
 #print('[supp]----跳过此步骤，编写补充文件')
 print('针对进近程序的代码说明：[R]--RNP  [I]--ILS  [V]--VOR  [N]--NDB')
-print('示例：[I16]--ILS 16  [I32-Z]--ILSZ 32  [R34]--RNP 34')
+print('               示例：[I16]--ILS 16  [I32-Z]--ILSZ 32  [R34]--RNP 34')
 print('ovo让我们开始吧：')
 list_procdata = []
 while status_leg:
@@ -525,8 +555,12 @@ while status_leg:
 	procname = input('程序名称和下一程序或跑道：').upper()
 	#if procname == 'SUPP':
 
+	if procname == 'DONE':
+		status_leg = False
+		print('\n选择想输出的数据类型并导出！')
+		break
 	while not Checkprocedurelist(procname):
-		procname = input('错误，请重新输入程序名称和下一程序或跑道：').upper()
+		procname = input('格式错误。程序名称和下一程序或跑道：').upper()
 	list_procname = procname.split()
 	data_name = list_procname[0]
 	data_next = list_procname[1]
@@ -534,7 +568,7 @@ while status_leg:
 	while status_procdata:
 		legtype = input('航段类型：').upper()
 		while legtype not in list_legtype and legtype != 'OK' and legtype != 'DONE':
-			legtype = input('错误，请重新输入航段类型：').upper()
+			legtype = input('类型错误。航段类型：').upper()
 		print('带"*"项目选填')
 		if legtype == 'OK':
 			status_procdata = False
@@ -551,14 +585,14 @@ while status_leg:
 
 ###输出数据
 status_output = True
-print('可输出文件类型：\n[txt]--.txt\n[sid]--.sid\n[sidtrs]--.sidtrs\n[star]--.star\n[startrs]--.startrs\n[app]--.app')
+print('可输出文件类型：\n[txt]--.txt\n[sid]--.sid\n[sidtrs]--.sidtrs\n[star]--.star\n[startrs]--.startrs\n[app]--.app\n[apptrs]--.apptrs')
 list_output = []
 list_output.extend(list_procedure)
 list_output.extend(list_procdata)
 filetype = input('输出文件类型：').upper()
-while filetype != '':
-	filetype = input('文件类型错误。输出文件类型：').upper()
+while filetype not in list_filetype:
+	filetype = input('类型错误！输出文件类型：').upper()
 ICAOcode = input('机场ICAO代码：').upper()
 while ICAOcode == '':
-	ICAOcode = input('不能为空。机场ICAO代码：').upper()
+	ICAOcode = input('不能为空！机场ICAO代码：').upper()
 Outputdata(filetype, ICAOcode, list_output)
