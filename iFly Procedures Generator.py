@@ -8,14 +8,16 @@ list_legtype = ['PI', 'HA', 'HF', 'HM', 'FM', 'VM', 'AF', 'CA', 'VA', 'CD', 'VD'
 
 # 软件信息
 print('iFly Jets ADV Series 飞行程序数据文件生成器\n')
-print('当前版本：3.1.1\n')
+print('当前版本：3.1.2\n')
 print('更新日志：')
 print('1.0.0  2022.04.22  实现坐标的检查、转换、读取和存储')
 print('2.0.0  2022.04.23  实现程序列表的检查、排序和生成')
 print('3.0.0  2022.04.23  实现根据航段类型生成程序')
 print('                   实现合并数据，分类导出')
-print('3.1.1  2022.04.24  实现程序列表的读取和存储')
+print('3.1.0  2022.04.24  实现程序列表的读取和存储')
 print('                   修复一堆bug')
+print('3.1.1  2022.04.25  修复程序列表存储后再读取会出现程序重复的问题')
+print('3.1.2  2022.04.26  修复部分输入为空时程序闪退的问题')
 
 # 函数
 ### 检查输入航路点正确与否
@@ -255,10 +257,16 @@ def Leg_HAHFHM(legtype):
 	coordinate = Getcoordinate()
 	cross = input('*飞越填1：')
 	heading = input('磁航向：')
+	while heading == "":
+		heading = input('磁航向：')
 	turn = input('转弯指示(L/R)：').upper()
+	while turn == '':
+		turn = input('转弯指示(L/R)：').upper()
 	altitude = input('*英尺高度：').upper()
 	speed = input('*速度限制(节)：').upper()
 	dist = input('等待边距离(海里)或时间(分钟×10000)：')
+	while dist == '':
+		dist = input('等待边距离(海里)或时间(分钟×10000)：')
 	list_legdata.append('Name={}'.format(coordinate[0]))
 	list_legdata.append('Latitude={}'.format(coordinate[1]))
 	list_legdata.append('Longitude={}'.format(coordinate[2]))
@@ -279,7 +287,11 @@ def Leg_AF(legtype):
 	list_legdata = ['Leg=AF']
 	coordinate = Getcoordinate()
 	frequency = input('DME台代码：').upper()
+	while frequency == '':
+		frequency = input('DME台代码：').upper()
 	navdist = input('相对DME台距离(海里)：')
+	while navdist == '':
+		navdist = input('相对DME台距离(海里)：')
 	cross = input('*飞越填1：')
 	altitude = input('*英尺高度：').upper()
 	speed = input('*速度限制(节)：').upper()
@@ -300,7 +312,11 @@ def Leg_AF(legtype):
 def Leg_CAVA(legtype):
 	list_legdata = ['Leg={}'.format(legtype)]
 	heading = input('磁航向：')
+	while heading == "":
+		heading = input('磁航向：')
 	altitude = input('英尺高度：').upper()
+	while altitude == '':
+		altitude = input('英尺高度：').upper()
 	speed = input('*速度限制(节)：').upper()
 	list_legdata.append('Heading={}'.format(heading))
 	list_legdata.append('Altitude={}'.format(altitude))
@@ -314,6 +330,8 @@ def Leg_CF(legtype):
 	coordinate = Getcoordinate()
 	cross = input('*飞越填1：')
 	heading = input('磁航向：')
+	while heading == "":
+		heading = input('磁航向：')
 	altitude = input('*英尺高度：').upper()
 	speed = input('*速度限制(节)：').upper()
 	list_legdata.append('Name={}'.format(coordinate[0]))
@@ -457,7 +475,7 @@ while status_coordinate:
 ### 生成程序列表
 status_list = True
 print('在本部分输入如下指令可使用额外功能：')
-print('[done]----结束坐标输入并选择模式')
+print('[read]----读取程序列表\n[save]----导出程序列表\n[done]----结束坐标输入并选择模式')
 print('输入格式：[当前程序名] [链接的程序或跑道]')
 print('注意各项之间以空格分开')
 print('针对进近程序的代码说明：[R]--RNP  [I]--ILS  [V]--VOR  [N]--NDB')
@@ -482,6 +500,7 @@ while status_list:
 	elif procedurelist == 'READ':
 		readICAOcode = input('机场ICAO代码：').upper()
 		list_procedure = Readproclist(readICAOcode)
+		list_tempproc = []
 		print('{}程序列表读取成功！'.format(readICAOcode))
 	elif procedurelist == 'SAVE':
 		saveICAOcode = input('机场ICAO代码：').upper()
@@ -537,5 +556,9 @@ list_output = []
 list_output.extend(list_procedure)
 list_output.extend(list_procdata)
 filetype = input('输出文件类型：').upper()
+while filetype != '':
+	filetype = input('文件类型错误。输出文件类型：').upper()
 ICAOcode = input('机场ICAO代码：').upper()
+while ICAOcode == '':
+	ICAOcode = input('不能为空。机场ICAO代码：').upper()
 Outputdata(filetype, ICAOcode, list_output)
