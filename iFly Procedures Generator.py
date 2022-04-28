@@ -11,7 +11,7 @@ list_one = ['', '1']
 
 # 软件信息
 print('iFly Jets ADV Series 飞行程序数据文件生成器\n')
-print('当前版本：3.1.3\n')
+print('当前版本：3.2.0\n')
 print('更新日志：')
 print('1.0.0  2022.04.22  实现坐标的检查、转换、读取和存储')
 print('2.0.0  2022.04.23  实现程序列表的检查、排序和生成')
@@ -25,6 +25,9 @@ print('3.1.3  2022.04.27  实现对文件类型、转弯方向、0或1输入的�
 print('                   修复部分会导致闪退的 bug')
 print('                   修复导出类型无法输入的 bug')
 print('                   修复不能导出 .apptrs 文件的 bug')
+print('                   调整文本排版')
+print('3.2.0  2022.04.28  实现 Supp 文件生成')
+print('                   消除航向前置零')
 print('                   调整文本排版')
 
 # 函数
@@ -107,6 +110,31 @@ def Cookandstorecoordinate(rawcoordinate):
 		waypointlatitude = '%.6f' % latitude_raw
 		waypointlongitude = '%.6f' % longitude_raw
 		dict_coordinate [waypointname] = [waypointlatitude, waypointlongitude]
+
+### 机位处理
+def Cookgate():
+	status_inputgate = True
+	list_gate = ['[GATE]']
+	print('输入格式：[机位号] [纬度 度] [纬度 分] [纬度 秒] [经度 度] [经度 分] [经度 秒]')
+	print('输入 [done] 完成机位信息输入')
+	while status_inputgate:
+		gateandcoordinate = input('').upper()
+		while not Checkcoordinate(gateandcoordinate):
+			gateandcoordinate = input('').upper()
+		raw_list = gateandcoordinate.split()
+		if gateandcoordinate == 'DONE':
+			list_gate.append('')
+			status_inputgate = False
+			return list_gate
+		gatenumber = raw_list[0]
+		if len(raw_list) == 7:
+			latitude_raw = int(raw_list[1]) + (int(raw_list[2]) + (float(raw_list[3]) / 60)) / 60
+			longitude_raw = int(raw_list[4]) + (int(raw_list[5]) + (float(raw_list[6]) / 60)) / 60
+			gatelatitude = '%.6f' % latitude_raw
+			gatelongitude = '%.6f' % longitude_raw
+			list_gate.append('{}={},{}'.format(gatenumber, gatelatitude, gatelongitude))
+		else:
+			continue
 
 ### 读取csv航路点坐标列表
 def Readcoordinates(ICAOcode):
@@ -266,9 +294,9 @@ def Leg_HAHFHM(legtype):
 	cross = input('*飞越填1：')
 	while cross not in list_one:
 		cross = input('输入错误！*飞越填1：')
-	heading = input('磁航向：')
-	while heading == "":
-		heading = input('不能为空！磁航向：')
+	heading = int(input('磁航向：'))
+	while heading == '':
+		heading = int(input('不能为空！磁航向：'))
 	turn = input('转弯指示(L/R)：').upper()
 	while turn not in list_turn:
 		turn = input('输入错误！转弯指示(L/R)：').upper()
@@ -323,9 +351,9 @@ def Leg_AF(legtype):
 ### CA/VA航段
 def Leg_CAVA(legtype):
 	list_legdata = ['Leg={}'.format(legtype)]
-	heading = input('磁航向：')
+	heading = int(input('磁航向：'))
 	while heading == '':
-		heading = input('不能为空！磁航向：')
+		heading = int(input('不能为空！磁航向：'))
 	altitude = input('英尺高度：').upper()
 	while altitude == '':
 		altitude = input('不能为空！英尺高度：').upper()
@@ -343,9 +371,9 @@ def Leg_CF(legtype):
 	cross = input('*飞越填1：')
 	while cross not in list_one:
 		cross = input('输入错误！*飞越填1：')
-	heading = input('磁航向：')
+	heading = int(input('磁航向：'))
 	while heading == '':
-		heading = input('不能为空！磁航向：')
+		heading = int(input('不能为空！磁航向：'))
 	altitude = input('*英尺高度：').upper()
 	speed = input('*速度限制(节)：').upper()
 	list_legdata.append('Name={}'.format(coordinate[0]))
@@ -389,7 +417,7 @@ def Leg_DF(legtype):
 def Leg_RF(legtype):
 	list_legdata = ['Leg=RF']
 	coordinate = Getcoordinate()
-	heading = input('*磁航向：')
+	heading = int(input('*磁航向：'))
 	turn = input('*转弯指示(L/R)：').upper()
 	while turn not in list_turn:
 		turn = input('输入错误！*转弯指示(L/R)：').upper()
@@ -441,6 +469,8 @@ def Leg_TFIF(legtype):
 
 ### 输出结果
 def Outputdata(filetype, ICAOcode, data):
+	if filetype == 'SUPP':
+		del data[0]
 	with open('{}.txt'.format(ICAOcode), 'w') as file_output:
 		for item in data:
 			file_output.write(item)
@@ -463,15 +493,39 @@ def Outputdata(filetype, ICAOcode, data):
 	elif filetype == 'APPTRS':
 		os.rename('{}.txt'.format(ICAOcode), '{}.apptrs'.format(ICAOcode))
 		print('数据已保存为 {}.apptrs'.format(ICAOcode))
+	elif filetype == 'SUPP':
+		os.rename('{}.txt'.format(ICAOcode), '{}.supp'.format(ICAOcode))
+		print('数据已保存为 {}.supp'.format(ICAOcode))
 	else:
 		print('数据已保存为 {}.txt'.format(ICAOcode))
+
+### Supp 文件生成
+def Supp():
+	list_suppdata = []
+	ifgate = input('补充机位信息填 Y 否则不填：').upper()
+	if ifgate == 'Y':
+		list_suppdata.extend(Cookgate())
+	altitude = input('减速高度：')
+	speed = input('减速到的速度：')
+	TA = input('过渡高度：')
+	TL = input('过渡高度层：')
+	list_suppdata.append('[Speed_Transition]')
+	list_suppdata.append('Speed={}'.format(speed))
+	list_suppdata.append('Altitude={}'.format(altitude))
+	list_suppdata.append('')
+	list_suppdata.append('[Transition_Altitude]')
+	list_suppdata.append('Altitude={}'.format(TA))
+	list_suppdata.append('')
+	list_suppdata.append('[Transition_Level]')
+	list_suppdata.append('Altitude={}'.format(TL))
+	return list_suppdata
 
 # 主程序
 ### 航路点
 status_coordinate = True
 print('\n先将航路点名称和坐标录入程序！')
 print('在本部分输入如下指令可使用额外功能：')
-print('    [read]————读取csv航路点列表\n    [save]————导出csv航路点列表\n    [done]————结束坐标输入并开始编写程序')
+print('[read]----读取csv航路点列表\n[save]----导出csv航路点列表\n[done]----结束坐标输入并开始编写程序')
 print('输入格式：[航路点名称] [纬度 度] [纬度 分] 【纬度 秒】 [经度 度] [经度 分] 【经度 秒】')
 print('注意：①秒数据可不填\n     ②各项之间以空格分开')
 print('ovo让我们开始吧：')
@@ -502,7 +556,7 @@ while status_coordinate:
 ### 生成程序列表
 status_list = True
 print('在本部分输入如下指令可使用额外功能：')
-print('    [read]————读取程序列表\n    [save]————导出程序列表\n    [done]————结束坐标输入并选择模式')
+print('[read]----读取程序列表\n[save]----导出程序列表\n[done]----结束坐标输入并选择模式')
 print('输入格式：[当前程序名] [链接的程序或跑道]')
 print('注意：各项之间以空格分开')
 print('针对进近程序代码的说明：[R]--RNP  [I]--ILS  [V]--VOR  [N]--NDB')
@@ -543,8 +597,7 @@ while status_list:
 ### 编写程序
 status_leg = True
 print('在本部分输入如下指令可使用额外功能：')
-print('    [ok]------结束编写当前程序，开始编写下一程序\n    [done]----结束程序编写并导出程序')
-#print('[supp]----跳过此步骤，编写补充文件')
+print('[ok]------结束编写当前程序，开始编写下一程序\n[done]----结束程序编写并导出程序\n[supp]----跳过此步骤，编写补充文件')
 print('针对进近程序的代码说明：[R]--RNP  [I]--ILS  [V]--VOR  [N]--NDB')
 print('               示例：[I16]--ILS 16  [I32-Z]--ILSZ 32  [R34]--RNP 34')
 print('ovo让我们开始吧：')
@@ -553,39 +606,43 @@ while status_leg:
 	status_procdata = True
 	index_procdata = 0
 	procname = input('程序名称和下一程序或跑道：').upper()
-	#if procname == 'SUPP':
-
-	if procname == 'DONE':
+	if procname == 'SUPP':
+		status_leg = False
+		list_procdata = Supp()
+		break
+	elif procname == 'DONE':
 		status_leg = False
 		print('\n选择想输出的数据类型并导出！')
 		break
-	while not Checkprocedurelist(procname):
-		procname = input('格式错误。程序名称和下一程序或跑道：').upper()
-	list_procname = procname.split()
-	data_name = list_procname[0]
-	data_next = list_procname[1]
-	index_data = 0
-	while status_procdata:
-		legtype = input('航段类型：').upper()
-		while legtype not in list_legtype and legtype != 'OK' and legtype != 'DONE':
-			legtype = input('类型错误。航段类型：').upper()
-		print('带"*"项目选填')
-		if legtype == 'OK':
-			status_procdata = False
-			print('\n此段程序现已暂存，开始输入下一段程序！')
-		elif legtype == 'DONE':
-			status_procdata = False
-			status_leg = False
-			print('\n程序现已暂存，下面选择想输出的数据类型并导出！')
-		else:
-			list_procdata.append('[{}.{}.{}]'.format(data_name, data_next, index_data))
-			legdata = Leg_classify(legtype)
-			list_procdata.extend(legdata)
-			index_data += 1
+	else:
+		while not Checkprocedurelist(procname):
+			procname = input('格式错误。程序名称和下一程序或跑道：').upper()
+		list_procname = procname.split()
+		data_name = list_procname[0]
+		data_next = list_procname[1]
+		index_data = 0
+		while status_procdata:
+			legtype = input('航段类型：').upper()
+			while legtype not in list_legtype and legtype != 'OK' and legtype != 'DONE':
+				legtype = input('类型错误。航段类型：').upper()
+			print('带"*"项目选填')
+			if legtype == 'OK':
+				status_procdata = False
+				print('\n此段程序现已暂存，开始输入下一段程序！')
+			elif legtype == 'DONE':
+				status_procdata = False
+				status_leg = False
+				print('\n程序现已暂存，下面选择想输出的数据类型并导出！')
+			else:
+				list_procdata.append('[{}.{}.{}]'.format(data_name, data_next, index_data))
+				legdata = Leg_classify(legtype)
+				list_procdata.extend(legdata)
+				index_data += 1
 
 ###输出数据
 status_output = True
-print('可输出文件类型：\n[txt]--.txt\n[sid]--.sid\n[sidtrs]--.sidtrs\n[star]--.star\n[startrs]--.startrs\n[app]--.app\n[apptrs]--.apptrs')
+print('可输出文件类型：\n[txt] ------ .txt\n[sid] ------ .sid\n[sidtrs] --- .sidtrs\n[star] ----- .star'
+	  '\n[startrs] -- .startrs\n[app] ------ .app\n[apptrs] --- .apptrs\n[supp] ----- .supp')
 list_output = []
 list_output.extend(list_procedure)
 list_output.extend(list_procdata)
