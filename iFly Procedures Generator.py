@@ -116,7 +116,7 @@ def Cookgate():
 	status_inputgate = True
 	list_gate = ['[GATE]']
 	print('输入格式：[机位号] [纬度 度] [纬度 分] [纬度 秒] [经度 度] [经度 分] [经度 秒]')
-	print('输入 [done] 完成输入')
+	print('输入 [done] 完成机位信息输入')
 	while status_inputgate:
 		gateandcoordinate = input('').upper()
 		while not Checkcoordinate(gateandcoordinate):
@@ -132,7 +132,7 @@ def Cookgate():
 			longitude_raw = int(raw_list[4]) + (int(raw_list[5]) + (float(raw_list[6]) / 60)) / 60
 			gatelatitude = '%.6f' % latitude_raw
 			gatelongitude = '%.6f' % longitude_raw
-			list_gate.append('{}={}.{}'.format(gatenumber, gatelatitude, gatelongitude))
+			list_gate.append('{}={},{}'.format(gatenumber, gatelatitude, gatelongitude))
 		else:
 			continue
 
