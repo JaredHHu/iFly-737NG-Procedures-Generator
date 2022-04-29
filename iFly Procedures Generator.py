@@ -11,7 +11,7 @@ list_one = ['', '1']
 
 # 软件信息
 print('iFly Jets ADV Series 飞行程序数据文件生成器\n')
-print('当前版本：3.2.0\n')
+print('当前版本：3.3.0\n')
 print('更新日志：')
 print('1.0.0  2022.04.22  实现坐标的检查、转换、读取和存储')
 print('2.0.0  2022.04.23  实现程序列表的检查、排序和生成')
@@ -29,6 +29,10 @@ print('                   调整文本排版')
 print('3.2.0  2022.04.28  实现 Supp 文件生成')
 print('                   消除航向前置零')
 print('                   调整文本排版')
+print('3.3.0  2022.04.29  实现 CD/VD 航段生成')
+print('                   实现 FD 航段生成')
+print('                   实现 CF 航段的下滑坡度和复飞点填写')
+print('                   修复 TF/IF 航段下滑坡度无法填写的 bug')
 
 # 函数
 ### 检查输入航路点正确与否
@@ -229,9 +233,7 @@ def Leg_classify(legtype):
 		legdata = Leg_CAVA(legtype)
 		return legdata
 	elif legtype == 'CD' or legtype == 'VD':
-		print('模式暂不可用')
-		legdata = ['{}航段暂无法生成'.format(legtype)]
-		#legdata = Leg_CDVD(legtype)
+		legdata = Leg_CDVD(legtype)
 		return legdata
 	elif legtype == 'CF':
 		legdata = Leg_CF(legtype)
@@ -260,9 +262,7 @@ def Leg_classify(legtype):
 		#legdata = Leg_FC(legtype)
 		return legdata
 	elif legtype == 'FD':
-		print('模式暂不可用')
-		legdata = ['{}航段暂无法生成'.format(legtype)]
-		#legdata = Leg_FD(legtype)
+		legdata = Leg_FD(legtype)
 		return legdata
 	elif legtype == 'RF':
 		legdata = Leg_RF(legtype)
@@ -364,6 +364,29 @@ def Leg_CAVA(legtype):
 		list_legdata.append('Speed={}'.format(speed))
 	return list_legdata
 
+### CD/VD航段
+def Leg_CDVD(legtype):
+	list_legdata = ['Leg={}'.format(legtype)]
+	heading = int(input('磁航向：'))
+	while heading == '':
+		heading = int(input('不能为空！磁航向：'))
+	altitude = input('*英尺高度：').upper()
+	speed = input('*速度限制(节)：').upper()
+	frequency = input('DME台代码：').upper()
+	while frequency == '':
+		frequency = input('不能为空！DME台代码：').upper()
+	navdist = input('相对DME台距离(海里)：')
+	while navdist == '':
+		navdist = input('不能为空！相对DME台距离(海里)：')
+	list_legdata.append('Heading={}'.format(heading))
+	if altitude != '':
+		list_legdata.append('Altitude={}'.format(altitude))
+	if speed != '':
+		list_legdata.append('Speed={}'.format(speed))
+	list_legdata.append('Frequency={}'.format(frequency))
+	list_legdata.append('NavDist={}'.format(navdist))
+	return  list_legdata
+
 ### CF航段
 def Leg_CF(legtype):
 	list_legdata = ['Leg=CF']
@@ -376,6 +399,10 @@ def Leg_CF(legtype):
 		heading = int(input('不能为空！磁航向：'))
 	altitude = input('*英尺高度：').upper()
 	speed = input('*速度限制(节)：').upper()
+	mapt = input('*复飞点填1：')
+	while mapt not in list_one:
+		mapt = input('输入错误！*复飞点填1：')
+	slope = input('*航径坡度：')
 	list_legdata.append('Name={}'.format(coordinate[0]))
 	list_legdata.append('Latitude={}'.format(coordinate[1]))
 	list_legdata.append('Longitude={}'.format(coordinate[2]))
@@ -386,6 +413,10 @@ def Leg_CF(legtype):
 		list_legdata.append('Altitude={}'.format(altitude))
 	if speed != '':
 		list_legdata.append('Speed={}'.format(speed))
+	if mapt != '':
+		list_legdata.append('MAP=1')
+	if slope != '':
+		list_legdata.append('Slope={}'.format(slope))
 	return list_legdata
 
 ### DF航段
@@ -411,6 +442,33 @@ def Leg_DF(legtype):
 		list_legdata.append('Altitude={}'.format(altitude))
 	if speed != '':
 		list_legdata.append('Speed={}'.format(speed))
+	return list_legdata
+
+### FD航段
+def Leg_FD(legtype):
+	list_legdata = ['Leg=FD']
+	coordinate = Getcoordinate()
+	heading = int(input('磁航向：'))
+	while heading == '':
+		heading = int(input('不能为空！磁航向：'))
+	altitude = input('*英尺高度：').upper()
+	speed = input('*速度限制(节)：').upper()
+	frequency = input('DME台代码：').upper()
+	while frequency == '':
+		frequency = input('不能为空！DME台代码：').upper()
+	navdist = input('相对DME台距离(海里)：')
+	while navdist == '':
+		navdist = input('不能为空！相对DME台距离(海里)：')
+	list_legdata.append('Name={}'.format(coordinate[0]))
+	list_legdata.append('Latitude={}'.format(coordinate[1]))
+	list_legdata.append('Longitude={}'.format(coordinate[2]))
+	list_legdata.append('Heading={}'.format(heading))
+	if altitude != '':
+		list_legdata.append('Altitude={}'.format(altitude))
+	if speed != '':
+		list_legdata.append('Speed={}'.format(speed))
+	list_legdata.append('Frequency={}'.format(frequency))
+	list_legdata.append('NavDist={}'.format(navdist))
 	return list_legdata
 
 ### RF航段
@@ -463,7 +521,7 @@ def Leg_TFIF(legtype):
 		list_legdata.append('Speed={}'.format(speed))
 	if mapt != '':
 		list_legdata.append('MAP=1')
-	if mapt != '':
+	if slope != '':
 		list_legdata.append('Slope={}'.format(slope))
 	return list_legdata
 
