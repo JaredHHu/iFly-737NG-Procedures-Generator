@@ -11,7 +11,7 @@ list_one = ['', '1']
 
 # 软件信息
 print('iFly Jets ADV Series 飞行程序数据文件生成器\n')
-print('当前版本：3.3.0\n')
+print('当前版本：3.4.0\n')
 print('更新日志：')
 print('1.0.0  2022.04.22  实现坐标的检查、转换、读取和存储')
 print('2.0.0  2022.04.23  实现程序列表的检查、排序和生成')
@@ -33,12 +33,13 @@ print('3.3.0  2022.04.29  实现 CD/VD 航段生成')
 print('                   实现 FD 航段生成')
 print('                   实现 CF 航段的下滑坡度和复飞点填写')
 print('                   修复 TF/IF 航段下滑坡度无法填写的 bug')
+print('3.4.0  2022.04.30  实现 PMDG 坐标格式到 iFly 坐标格式的转换')
 
 # 函数
 ### 检查输入航路点正确与否
 def Checkcoordinate(rawcoordinate):
 	checker_coordinate = rawcoordinate.split()
-	if checker_coordinate[0] == "READ" or checker_coordinate[0] == "SAVE" or checker_coordinate[0] == "DONE":
+	if checker_coordinate[0] == 'READ' or checker_coordinate[0] == 'SAVE' or checker_coordinate[0] == 'DONE' or checker_coordinate[0] == 'PMDG':
 		return True
 	elif 0 < len(checker_coordinate[0]) <= 5:
 		if len(checker_coordinate) == 7:
@@ -97,6 +98,16 @@ def Checkprocedurelist(procedure):
 			return False
 	else:
 		return False
+
+### PMDG转换为iFly
+def PMDGtoiFly(PMDGcooridnate):
+	raw_list = PMDGcooridnate.split()
+	waypointname = raw_list[1]
+	latitude_raw = int(raw_list[4]) + float(raw_list[5]) / 60
+	longitude_raw = int(raw_list[7]) + float(raw_list[8]) / 60
+	waypointlatitude = '%.6f' % latitude_raw
+	waypointlongitude = '%.6f' % longitude_raw
+	dict_coordinate [waypointname] = [waypointlatitude, waypointlongitude]
 
 ### 航路点处理与存储
 def Cookandstorecoordinate(rawcoordinate):
@@ -583,7 +594,7 @@ def Supp():
 status_coordinate = True
 print('\n先将航路点名称和坐标录入程序！')
 print('在本部分输入如下指令可使用额外功能：')
-print('[read]----读取csv航路点列表\n[save]----导出csv航路点列表\n[done]----结束坐标输入并开始编写程序')
+print('[read]----读取csv航路点列表\n[save]----导出csv航路点列表\n[done]----结束坐标输入并开始编写程序\n[pmdg]----转换PMDG坐标')
 print('输入格式：[航路点名称] [纬度 度] [纬度 分] 【纬度 秒】 [经度 度] [经度 分] 【经度 秒】')
 print('注意：①秒数据可不填\n     ②各项之间以空格分开')
 print('ovo让我们开始吧：')
@@ -608,6 +619,17 @@ while status_coordinate:
 		for key_dict, value_dict in dict_coordinate.items():
 			print('{:^5}\t{:^10}\t{:^11}'.format(key_dict, value_dict[0], value_dict[1]))
 		print('\n航路点坐标现已暂存，下面开始生成程序列表！')
+	elif rawcoordinate == 'PMDG':
+		status_PMDGtoiFly = True
+		print('开始转换 PMDG 坐标格式到 iFly 坐标格式。\n其他指令：[done]----结束转换模式')
+		while status_PMDGtoiFly:
+			PMDGcoordinate = input().upper()
+			if PMDGcoordinate == 'DONE':
+				status_PMDGtoiFly = False
+				print('在本部分输入如下指令可使用额外功能：')
+				print('[read]----读取csv航路点列表\n[save]----导出csv航路点列表\n[done]----结束坐标输入并开始编写程序')
+			else:
+				PMDGtoiFly(PMDGcoordinate)
 	else:
 		Cookandstorecoordinate(rawcoordinate)
 
