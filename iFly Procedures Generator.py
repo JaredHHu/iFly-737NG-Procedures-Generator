@@ -1,6 +1,7 @@
 # 外部库
 import csv
 import os
+import shutil
 
 #基本信息
 list_legtype = ['PI', 'HA', 'HF', 'HM', 'FM', 'VM', 'AF', 'CA', 'VA', 'CD', 'VD', 'CF',
@@ -11,35 +12,40 @@ list_one = ['', '1']
 
 # 软件信息
 print('iFly Jets ADV Series 飞行程序数据文件生成器\n')
-print('当前版本：3.4.0\n')
-print('更新日志：')
-print('1.0.0  2022.04.22  实现坐标的检查、转换、读取和存储')
-print('2.0.0  2022.04.23  实现程序列表的检查、排序和生成')
-print('3.0.0  2022.04.23  实现根据航段类型生成程序')
-print('                   实现合并数据，分类导出')
-print('3.1.0  2022.04.24  实现程序列表的读取和存储')
-print('                   修复一堆 bug')
-print('3.1.1  2022.04.25  修复程序列表存储后再读取会出现程序重复的问题')
-print('3.1.2  2022.04.26  修复部分输入为空时程序闪退的问题')
-print('3.1.3  2022.04.27  实现对文件类型、转弯方向、0或1输入的检查与限制')
-print('                   修复部分会导致闪退的 bug')
-print('                   修复导出类型无法输入的 bug')
-print('                   修复不能导出 .apptrs 文件的 bug')
-print('                   调整文本排版')
-print('3.2.0  2022.04.28  实现 Supp 文件生成')
-print('                   消除航向前置零')
-print('                   调整文本排版')
-print('3.3.0  2022.04.29  实现 CD/VD 航段生成')
-print('                   实现 FD 航段生成')
-print('                   实现 CF 航段的下滑坡度和复飞点填写')
-print('                   修复 TF/IF 航段下滑坡度无法填写的 bug')
-print('3.4.0  2022.04.30  实现 PMDG 坐标格式到 iFly 坐标格式的转换')
+print('当前版本：3.5.0')
 
 # 函数
+### 更新日志
+def Updatelog():
+	print('更新日志：')
+	print('1.0.0  2022.04.22  实现坐标的检查、转换、读取和存储')
+	print('2.0.0  2022.04.23  实现程序列表的检查、排序和生成')
+	print('3.0.0  2022.04.23  实现根据航段类型生成程序')
+	print('                   实现合并数据，分类导出')
+	print('3.1.0  2022.04.24  实现程序列表的读取和存储')
+	print('                   修复一堆 bug')
+	print('3.1.1  2022.04.25  修复程序列表存储后再读取会出现程序重复的问题')
+	print('3.1.2  2022.04.26  修复部分输入为空时程序闪退的问题')
+	print('3.1.3  2022.04.27  实现对文件类型、转弯方向、0或1输入的检查与限制')
+	print('                   修复部分会导致闪退的 bug')
+	print('                   修复导出类型无法输入的 bug')
+	print('                   修复不能导出 .apptrs 文件的 bug')
+	print('                   调整文本排版')
+	print('3.2.0  2022.04.28  实现 Supp 文件生成')
+	print('                   消除航向前置零')
+	print('                   调整文本排版')
+	print('3.3.0  2022.04.29  实现 CD/VD 航段生成')
+	print('                   实现 FD 航段生成')
+	print('                   实现 CF 航段的下滑坡度和复飞点填写')
+	print('                   修复 TF/IF 航段下滑坡度无法填写的 bug')
+	print('3.4.0  2022.04.30  实现 PMDG 坐标格式到 iFly 坐标格式的转换')
+	print('3.5.0  2022.05.04  实现使用文件夹分类')
+	print('                   修复读取文件时文件不存在会闪退的 bug')
+
 ### 检查输入航路点正确与否
 def Checkcoordinate(rawcoordinate):
 	checker_coordinate = rawcoordinate.split()
-	if checker_coordinate[0] == 'READ' or checker_coordinate[0] == 'SAVE' or checker_coordinate[0] == 'DONE' or checker_coordinate[0] == 'PMDG':
+	if checker_coordinate[0] == 'READ' or checker_coordinate[0] == 'SAVE' or checker_coordinate[0] == 'DONE' or checker_coordinate[0] == 'PMDG' or checker_coordinate[0] == 'UPDT':
 		return True
 	elif 0 < len(checker_coordinate[0]) <= 5:
 		if len(checker_coordinate) == 7:
@@ -157,22 +163,27 @@ def Readcoordinates(ICAOcode):
 	list_coordinates = []
 	dictgenerating = True
 	index_key, index_value = 0, 1
-	with open('Waypoint_{}.csv'.format(ICAOcode), 'r') as csvfile:
-		reader = csv.reader(csvfile)
-		for row in reader:
-			list_coordinates.append(row)
-		list_coordinates = [str(value) for item in list_coordinates for value in item]#去除二级列表括号
-		while dictgenerating:
-			if index_key >= len(list_coordinates) or index_value >= len(list_coordinates):
-				dictgenerating = False
-			else:
-				list_temporary = []
-				list_temporary.append(list_coordinates[index_value])
-				list_temporary.append(list_coordinates[index_value + 1])
-				index_value += 3
-				dict_coordinate [list_coordinates[index_key]] = list_temporary
-				index_key += 3
-	return dict_coordinate
+	try: open('iFly Proc Generator\\data\\Waypoint_{}.csv'.format(ICAOcode), 'r')
+	except FileNotFoundError:
+		print('读取失败，文件不存在。')
+	else:
+		with open('iFly Proc Generator\\data\\Waypoint_{}.csv'.format(ICAOcode), 'r') as csvfile:
+			reader = csv.reader(csvfile)
+			for row in reader:
+				list_coordinates.append(row)
+			list_coordinates = [str(value) for item in list_coordinates for value in item]#去除二级列表括号
+			while dictgenerating:
+				if index_key >= len(list_coordinates) or index_value >= len(list_coordinates):
+					dictgenerating = False
+				else:
+					list_temporary = []
+					list_temporary.append(list_coordinates[index_value])
+					list_temporary.append(list_coordinates[index_value + 1])
+					index_value += 3
+					dict_coordinate [list_coordinates[index_key]] = list_temporary
+					index_key += 3
+		print('{} 航路点坐标列表读取成功！'.format(readICAOcode))
+		return dict_coordinate
 
 ### 导出csv航路点坐标列表
 def Savecoordinates(ICAOcode, dict):
@@ -192,22 +203,30 @@ def Savecoordinates(ICAOcode, dict):
 		list_coordinates += [list_temporary]
 		if index_key == len(list_keys):
 			csvgenerating = False
-	with open('Waypoint_{}.csv'.format(ICAOcode), 'w', newline='') as csvfile:
+	if not os.path.exists('iFly Proc Generator\\data'):
+		os.makedirs('iFly Proc Generator\\data')
+	with open('iFly Proc Generator\\data\\Waypoint_{}.csv'.format(ICAOcode), 'w', newline='') as csvfile:
 		writer = csv.writer(csvfile)
 		writer.writerows(list_coordinates)
-	return print('{} 航路点坐标列表已成功导出到程序所在目录！'.format(ICAOcode))
 
 ### 读取txt程序列表
 def Readproclist(ICAOcode):
-	with open('List_{}.txt'.format(ICAOcode, 'r')) as file:
-		list_procedure = file.read().splitlines()
-		return list_procedure
+	try: open('iFly Proc Generator\\data\\List_{}.txt'.format(ICAOcode, 'r'))
+	except FileNotFoundError:
+		print('读取失败，文件不存在。')
+	else:
+		with open('iFly Proc Generator\\data\\List_{}.txt'.format(ICAOcode, 'r')) as file:
+			list_procedure = file.read().splitlines()
+			print('{} 程序列表读取成功！'.format(ICAOcode))
+			return list_procedure
 
 ### 导出txt程序列表
 def Saveproclist(ICAOcode, proclist):
 	index_procedure = 0
 	proclist.sort()
-	with open('List_{}.txt'.format(ICAOcode), 'w') as file:
+	if not os.path.exists('iFly Proc Generator\\data'):
+		os.makedirs('iFly Proc Generator\\data')
+	with open('iFly Proc Generator\\data\\List_{}.txt'.format(ICAOcode), 'w') as file:
 		file.write('[list]')
 		file.write('\n')
 		for item_tempproc in proclist:
@@ -540,33 +559,47 @@ def Leg_TFIF(legtype):
 def Outputdata(filetype, ICAOcode, data):
 	if filetype == 'SUPP':
 		del data[0]
+	if not os.path.exists('iFly Proc Generator\\Sid'):
+		os.makedirs('iFly Proc Generator\\Sid')
+	if not os.path.exists('iFly Proc Generator\\Star'):
+		os.makedirs('iFly Proc Generator\\Star')
+	if not os.path.exists('iFly Proc Generator\\Supp'):
+		os.makedirs('iFly Proc Generator\\Supp')
 	with open('{}.txt'.format(ICAOcode), 'w') as file_output:
 		for item in data:
 			file_output.write(item)
 			file_output.write('\n')
 	if filetype == 'SID':
 		os.rename('{}.txt'.format(ICAOcode), '{}.sid'.format(ICAOcode))
+		shutil.move('{}.sid'.format(ICAOcode), 'iFly Proc Generator\\Sid')
 		print('数据已保存为 {}.sid'.format(ICAOcode))
 	elif filetype == 'SIDTRS':
 		os.rename('{}.txt'.format(ICAOcode), '{}.sidtrs'.format(ICAOcode))
+		shutil.move('{}.sidtrs'.format(ICAOcode), 'iFly Proc Generator\\Sid')
 		print('数据已保存为 {}.sidtrs'.format(ICAOcode))
 	elif filetype == 'STAR':
 		os.rename('{}.txt'.format(ICAOcode), '{}.star'.format(ICAOcode))
+		shutil.move('{}.star'.format(ICAOcode), 'iFly Proc Generator\\Star')
 		print('数据已保存为 {}.star'.format(ICAOcode))
 	elif filetype == 'STARTRS':
 		os.rename('{}.txt'.format(ICAOcode), '{}.startrs'.format(ICAOcode))
+		shutil.move('{}.startrs'.format(ICAOcode), 'iFly Proc Generator\\Star')
 		print('数据已保存为 {}.startrs'.format(ICAOcode))
 	elif filetype == 'APP':
 		os.rename('{}.txt'.format(ICAOcode), '{}.app'.format(ICAOcode))
+		shutil.move('{}.app'.format(ICAOcode), 'iFly Proc Generator\\Star')
 		print('数据已保存为 {}.app'.format(ICAOcode))
 	elif filetype == 'APPTRS':
 		os.rename('{}.txt'.format(ICAOcode), '{}.apptrs'.format(ICAOcode))
+		shutil.move('{}.apptrs'.format(ICAOcode), 'iFly Proc Generator\\Star')
 		print('数据已保存为 {}.apptrs'.format(ICAOcode))
 	elif filetype == 'SUPP':
 		os.rename('{}.txt'.format(ICAOcode), '{}.supp'.format(ICAOcode))
+		shutil.move('{}.supp'.format(ICAOcode), 'iFly Proc Generator\\Supp')
 		print('数据已保存为 {}.supp'.format(ICAOcode))
 	else:
-		print('数据已保存为 {}.txt'.format(ICAOcode))
+		shutil.move('{}.txt'.format(ICAOcode), 'iFly Proc Generator\\data')
+		print('{}.txt 已保存到 data 文件夹'.format(ICAOcode))
 
 ### Supp 文件生成
 def Supp():
@@ -594,7 +627,7 @@ def Supp():
 status_coordinate = True
 print('\n先将航路点名称和坐标录入程序！')
 print('在本部分输入如下指令可使用额外功能：')
-print('[read]----读取csv航路点列表\n[save]----导出csv航路点列表\n[done]----结束坐标输入并开始编写程序\n[pmdg]----转换PMDG坐标')
+print('[read]----读取csv航路点列表\n[save]----导出csv航路点列表\n[done]----结束坐标输入并开始编写程序\n[pmdg]----转换PMDG坐标\n[updt]----查看更新日志')
 print('输入格式：[航路点名称] [纬度 度] [纬度 分] 【纬度 秒】 [经度 度] [经度 分] 【经度 秒】')
 print('注意：①秒数据可不填\n     ②各项之间以空格分开')
 print('ovo让我们开始吧：')
@@ -608,7 +641,6 @@ while status_coordinate:
 		while readICAOcode == '':
 			readICAOcode = input('不能为空。机场ICAO代码：').upper()
 		dict_coordinate = Readcoordinates(readICAOcode)
-		print('{}航路点坐标列表读取成功！'.format(readICAOcode))
 	elif rawcoordinate == 'SAVE':
 		saveICAOcode = input('机场ICAO代码：').upper()
 		while saveICAOcode == '':
@@ -630,6 +662,8 @@ while status_coordinate:
 				print('[read]----读取csv航路点列表\n[save]----导出csv航路点列表\n[done]----结束坐标输入并开始编写程序')
 			else:
 				PMDGtoiFly(PMDGcoordinate)
+	elif rawcoordinate == 'UPDT':
+		Updatelog()
 	else:
 		Cookandstorecoordinate(rawcoordinate)
 
@@ -664,7 +698,6 @@ while status_list:
 			readICAOcode = input("不能为空。机场ICAO代码：").upper()
 		list_procedure = Readproclist(readICAOcode)
 		list_tempproc = []
-		print('{}程序列表读取成功！'.format(readICAOcode))
 	elif procedurelist == 'SAVE':
 		saveICAOcode = input('机场ICAO代码：').upper()
 		while saveICAOcode == '':
@@ -719,7 +752,7 @@ while status_leg:
 				list_procdata.extend(legdata)
 				index_data += 1
 
-###输出数据
+### 输出数据
 status_output = True
 print('可输出文件类型：\n[txt] ------ .txt\n[sid] ------ .sid\n[sidtrs] --- .sidtrs\n[star] ----- .star'
 	  '\n[startrs] -- .startrs\n[app] ------ .app\n[apptrs] --- .apptrs\n[supp] ----- .supp')
@@ -733,3 +766,4 @@ ICAOcode = input('机场ICAO代码：').upper()
 while ICAOcode == '':
 	ICAOcode = input('不能为空！机场ICAO代码：').upper()
 Outputdata(filetype, ICAOcode, list_output)
+input('按任意键结束程序。')
