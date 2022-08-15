@@ -14,7 +14,7 @@ status_pass = False
 
 # 软件信息
 print('iFly Jets ADV Series 飞行程序数据文件生成器\n')
-print('当前版本：3.6.0)
+print('当前版本：3.6.0')
 
 
 # 函数
